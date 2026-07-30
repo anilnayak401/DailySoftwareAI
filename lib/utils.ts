@@ -30,28 +30,20 @@ export function formatTime(timeString?: string | null): string {
 
 /**
  * Gets a clean, high-resolution logo URL for a product.
- * Prioritizes the website's real favicon/logo FIRST.
+ * Pulls the real target website favicon by following redirects and extracting webpage icons.
  */
 export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string | null, productName?: string, slug?: string): string {
-  // 1. If custom logoUrl exists and is not unsplash placeholder, use it
+  // 1. If explicit custom logoUrl exists (not unsplash), use it
   if (logoUrl && !logoUrl.includes('images.unsplash.com')) {
     return logoUrl;
   }
 
-  // 2. Extract domain from websiteUrl and return Google Favicon FIRST
+  // 2. Route through /api/extract-logo to follow affiliate redirects and pull real destination webpage favicon
   if (websiteUrl) {
-    try {
-      const parsed = new URL(websiteUrl);
-      const host = parsed.hostname.replace(/^www\./, '');
-      if (!host.includes('warriorplus') && !host.includes('jvz') && !host.includes('launchpadjv')) {
-        return `https://www.google.com/s2/favicons?domain=${host}&sz=128`;
-      }
-    } catch {
-      // fallback
-    }
+    return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo&name=${encodeURIComponent(productName || '')}`;
   }
 
-  // 3. Fallback: derive domain from product slug or name for favicon lookup
+  // 3. Fallback: derive domain from product slug for favicon lookup
   const cleanDomain = slug || (productName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (cleanDomain) {
     return `https://www.google.com/s2/favicons?domain=${cleanDomain}.com&sz=128`;
@@ -59,6 +51,7 @@ export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string |
 
   return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 }
+
 
 
 

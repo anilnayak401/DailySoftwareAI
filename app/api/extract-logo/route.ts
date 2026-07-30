@@ -1,33 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-function isMarketplaceImage(url: string): boolean {
-  const lowercase = url.toLowerCase();
+function isAffiliateRedirectDomain(domain: string): boolean {
+  const lowercase = domain.toLowerCase();
   return (
-    lowercase.includes('warriorplus.com/favicon') ||
-    lowercase.includes('warriorplus.com/images') ||
-    lowercase.includes('wplus_logo') ||
-    lowercase.includes('wplus-logo')
+    lowercase.includes('jvz') ||
+    lowercase.includes('jvzoo') ||
+    lowercase.includes('warriorplus') ||
+    lowercase.includes('launchpadjv') ||
+    lowercase.includes('clickbank') ||
+    lowercase.includes('paykickstart')
   );
-}
-
-function getProductMatchingImage(name: string): string {
-  const lower = name.toLowerCase();
-  if (lower.includes('chat') || lower.includes('support')) {
-    return 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=300&q=80';
-  }
-  if (lower.includes('seo') || lower.includes('rank') || lower.includes('keyword')) {
-    return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80';
-  }
-  if (lower.includes('trivia') || lower.includes('kids')) {
-    return 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80';
-  }
-  if (lower.includes('coloring') || lower.includes('promptoria') || lower.includes('eggshell')) {
-    return 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=300&q=80';
-  }
-  if (lower.includes('ephemera') || lower.includes('craft') || lower.includes('vintage')) {
-    return 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80';
-  }
-  return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 }
 
 export async function GET(request: NextRequest) {
@@ -40,24 +22,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
   }
 
-  let domain = '';
   try {
-    domain = new URL(targetUrl).hostname.replace(/^www\./, '');
-  } catch {
-    const matchingVisual = getProductMatchingImage(productName);
-    return NextResponse.redirect(matchingVisual, { status: 302 });
-  }
+    let finalUrl = targetUrl;
+    let finalDomain = '';
 
-  // 1. For non-marketplace product domains, Google Favicon is 100% fast, reliable & returns real brand favicon/logo!
-  if (type === 'logo' && !domain.includes('warriorplus.com') && !domain.includes('jvzoo.com') && !domain.includes('launchpadjv.com')) {
-    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-    return NextResponse.redirect(faviconUrl, { status: 302 });
-  }
+    try {
+      const initialDomain = new URL(targetUrl).hostname.replace(/^www\./, '');
 
-  try {
-    // 2. For marketplace or image requests, attempt to crawl target page
+      // If it's a direct product domain (not an affiliate redirect domain like jvz5 or warriorplus),
+      // we can return Google Favicon or IconHorse immediately!
+      if (type === 'logo' && !isAffiliateRedirectDomain(initialDomain)) {
+        const faviconUrl = `https://www.google.com/s2/favicons?domain=${initialDomain}&sz=128`;
+        return NextResponse.redirect(faviconUrl, { status: 302 });
+      }
+    } catch {
+      // ignore
+    }
+
+    // Follow redirects to get the real product sales page destination URL
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(targetUrl, {
       redirect: 'follow',
@@ -70,13 +54,30 @@ export async function GET(request: NextRequest) {
     });
     clearTimeout(timeoutId);
 
-    const finalUrl = response.url;
+    finalUrl = response.url;
     const html = await response.text();
-    const finalDomain = new URL(finalUrl).hostname.replace(/^www\./, '');
+    finalDomain = new URL(finalUrl).hostname.replace(/^www\./, '');
 
-    const candidates: string[] = [];
+    if (type === 'logo') {
+      // 1. Try to extract apple-touch-icon or shortcut icon from target HTML
+      const appleTouch = html.match(
+        /<link[^>]*rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]*href=["']([^"']+)["']/i
+      );
+      const iconMatch = html.match(
+        /<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/i
+      );
 
-    if (type === 'image') {
+      const rawIcon = appleTouch?.[1] || iconMatch?.[1];
+      if (rawIcon && !rawIcon.toLowerCase().includes('warriorplus')) {
+        const fullIconUrl = new URL(rawIcon, finalUrl).href;
+        return NextResponse.redirect(fullIconUrl, { status: 302 });
+      }
+
+      // 2. Return real favicon of final destination domain (e.g., getodinai.com, muncheye.com, etc.)
+      const faviconUrl = `https://www.google.com/s2/favicons?domain=${finalDomain}&sz=128`;
+      return NextResponse.redirect(faviconUrl, { status: 302 });
+    } else {
+      // Image request: extract og:image or twitter:image
       const ogMatch =
         html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
         html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
@@ -84,47 +85,24 @@ export async function GET(request: NextRequest) {
         html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
         html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
 
-      if (ogMatch?.[1]) candidates.push(ogMatch[1]);
-      if (twitterMatch?.[1]) candidates.push(twitterMatch[1]);
-    } else {
-      const appleTouch = html.match(
-        /<link[^>]*rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]*href=["']([^"']+)["']/i
-      );
-      const logoImg = html.match(
-        /<img[^>]*src=["']([^"']*(?:logo|brand|product|header)[^"']*)["']/i
-      );
-      const ogMatch = html.match(
-        /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i
-      );
-
-      if (logoImg?.[1]) candidates.push(logoImg[1]);
-      if (appleTouch?.[1]) candidates.push(appleTouch[1]);
-      if (ogMatch?.[1]) candidates.push(ogMatch[1]);
-    }
-
-    for (const rawUrl of candidates) {
-      if (!rawUrl) continue;
-      const fullUrl = new URL(rawUrl, finalUrl).href;
-
-      if (!isMarketplaceImage(fullUrl)) {
-        return NextResponse.redirect(fullUrl, { status: 302 });
+      const rawImage = ogMatch?.[1] || twitterMatch?.[1];
+      if (rawImage) {
+        const fullImageUrl = new URL(rawImage, finalUrl).href;
+        return NextResponse.redirect(fullImageUrl, { status: 302 });
       }
+
+      // Fallback live website screenshot
+      const screenshotUrl = `https://image.thum.io/get/width/1200/crop/800/${finalUrl}`;
+      return NextResponse.redirect(screenshotUrl, { status: 302 });
     }
-
-    if (!finalDomain.includes('warriorplus.com')) {
-      const faviconUrl = `https://www.google.com/s2/favicons?domain=${finalDomain}&sz=128`;
-      return NextResponse.redirect(faviconUrl, { status: 302 });
-    }
-
-    // Fallback: Matching product visual (no alphabetical badges!)
-    const matchingVisual = getProductMatchingImage(productName);
-    return NextResponse.redirect(matchingVisual, { status: 302 });
-
   } catch {
-    if (domain && !domain.includes('warriorplus.com')) {
-      return NextResponse.redirect(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`, { status: 302 });
+    // Network fallback: extract initial domain or return generic icon
+    try {
+      const domain = new URL(targetUrl).hostname.replace(/^www\./, '');
+      const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+      return NextResponse.redirect(faviconUrl, { status: 302 });
+    } catch {
+      return NextResponse.json({ error: 'Failed to extract logo' }, { status: 500 });
     }
-    const matchingVisual = getProductMatchingImage(productName);
-    return NextResponse.redirect(matchingVisual, { status: 302 });
   }
 }
