@@ -30,27 +30,28 @@ export function formatTime(timeString?: string | null): string {
 
 /**
  * Gets a clean, high-resolution logo URL for a product.
- * Uses logoUrl if present, otherwise automatically extracts actual favicon/image from websiteUrl.
+ * Filters out generic unsplash placeholders and pulls real website favicons/logos.
  */
 export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string | null, productName?: string, slug?: string): string {
-  // 1. If explicit custom logoUrl exists, use it!
-  if (logoUrl) {
+  // 1. If explicit custom logoUrl exists AND is not an unsplash placeholder, use it!
+  if (logoUrl && !logoUrl.includes('images.unsplash.com')) {
     return logoUrl;
   }
 
-  // 2. Route through /api/extract-logo to follow redirects and pull real destination favicon/image
+  // 2. Route through /api/extract-logo to follow redirects and pull real destination webpage favicon/logo
   if (websiteUrl) {
     return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo&name=${encodeURIComponent(productName || '')}`;
   }
 
-  // 3. Fallback: derive domain from product slug
+  // 3. Fallback: derive domain from product slug for favicon lookup
   const cleanDomain = slug || (productName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (cleanDomain) {
     return `https://www.google.com/s2/favicons?domain=${cleanDomain}.com&sz=128`;
   }
 
-  return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
+  return '/file.svg';
 }
+
 
 
 
