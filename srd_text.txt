@@ -1,0 +1,1597 @@
+SOFTWARE REQUIREMENTS DOCUMENT
+DailySoftwareAI.com
+A Premium Software Discovery, Ranking & Launch-Tracking Platform
+Beginner-Friendly, Implementation-Focused Build Specification
+
+Project
+DailySoftwareAI.com
+Document Type
+Full Requirements & Implementation Spec
+Target Audience
+Beginner web developer
+Deadline
+One-week MVP
+Stack
+Next.js · TypeScript · Tailwind · Supabase · Vercel
+Founder
+Naresh
+Priority Legend
+ P0  Must-have   P1  Should-have   P2  Nice-to-have
+
+Table of Contents
+TOC \h \o "1-2"
+
+
+1. Executive Summary
+DailySoftwareAI.com is a branded software discovery, ranking, review, and launch-tracking website. It curates AI tools, SaaS products, automation and marketing software, and lifetime deals, then earns affiliate revenue when visitors click through and purchase. The experience must feel like a modern, trustworthy, premium software directory — never a cheap affiliate blog.
+The one-week reality check
+This document is written for a beginner developer with a hard one-week deadline. Wherever the ideal architecture conflicts with shipping on time, this spec explicitly chooses the simpler path and documents the upgrade path for later.
+MVP target: a polished homepage, dynamic product & category pages loading from a real database, working affiliate redirects with click logging, core SEO, a protected admin panel, and a production deployment on Vercel.
+
+What we are building (MVP)
+A premium homepage that reuses the existing 3D hero and presents a #1 pick, trending products, launches, and category showcases.
+Dynamic, SEO-friendly product pages at /products/[slug] generated from the database.
+Category pages at /categories/[slug] with filtering and breadcrumbs.
+A launch calendar at /launches with timezone-aware launch dates.
+A safe affiliate redirect system at /go/[slug] that logs clicks and prevents open redirects.
+A simple, secure admin dashboard at /admin to add and manage products.
+SEO essentials: metadata, sitemap, robots.txt, structured data, and the required legal/trust pages.
+Recommended stack at a glance
+Next.js (App Router) + TypeScript + Tailwind CSS on the frontend; Supabase (PostgreSQL + Auth + Storage) as the backend; deployed on Vercel. Analytics via Google Analytics 4 and Search Console. Automation with n8n is explicitly deferred to a later phase.
+
+2. Business Requirements
+2.1 Business Concept
+The site aggregates and ranks software products, gives each one a dedicated review page, tracks launches, and drives qualified clicks to affiliate offers. Revenue is generated on affiliate conversions from marketplaces and direct SaaS programs.
+Product types promoted
+AI software
+SaaS tools
+Automation software
+Marketing software
+SEO tools
+Email marketing software
+CRM tools
+Lead generation tools
+Productivity software
+Creator tools
+Business software
+Newly launched digital products
+Lifetime software deals
+Selected affiliate offers
+Affiliate sources
+JVZoo
+WarriorPlus
+Other approved affiliate marketplaces
+Direct SaaS affiliate programs
+Software launch platforms
+2.2 Core Business Goals
+#
+Capability
+Priority
+Scope
+1
+List many software products
+ P0 
+MVP
+2
+Organize products into categories
+ P0 
+MVP
+3
+Display top-ranked products
+ P0 
+MVP
+4
+Show a #1 recommended product near the hero
+ P0 
+MVP
+5
+Display trending products
+ P0 
+MVP
+6
+Display newly launched products
+ P0 
+MVP
+7
+Display upcoming launches
+ P1 
+MVP
+8
+Store affiliate links
+ P0 
+MVP
+9
+Redirect users through affiliate links
+ P0 
+MVP
+10
+SEO-friendly page for every product
+ P0 
+MVP
+11
+Support launch dates
+ P0 
+MVP
+12
+Support product rankings
+ P0 
+MVP
+13
+Support ratings / editorial scores
+ P0 
+MVP
+14
+Support featured products
+ P1 
+MVP
+15
+Support search
+ P1 
+MVP
+16
+Support filters
+ P1 
+MVP
+17
+Scalable content management (admin)
+ P0 
+MVP
+18
+Click analytics
+ P1 
+MVP
+19
+SEO architecture
+ P0 
+MVP
+20
+Affiliate disclosures
+ P0 
+MVP
+21
+Future automation readiness
+ P2 
+Phase 2/3
+22
+Scale to hundreds/thousands of products
+ P1 
+Built-in
+
+3. User Personas
+Persona
+Who they are
+Needs / motivations
+Key sections used
+The Marketer Maya
+Runs paid and content campaigns; constantly hunting for new tools that give an edge.
+Wants curated, trustworthy picks and honest pros/cons before spending. Hates spammy listicles.
+Trending, Best Marketing Software, lifetime deals, review pages.
+The Founder Farhan
+Early-stage SaaS founder wearing many hats; time-poor.
+Wants a fast shortlist of the best CRM, automation, and productivity tools with clear pricing.
+#1 pick, Top Rated, category pages, comparison of alternatives.
+The Creator Chloe
+Content creator and solopreneur exploring AI and design tools.
+Wants approachable explanations, 'best for' guidance, and deals.
+Best AI Tools, creator tools, launch calendar.
+The Deal-Hunter Dan
+Actively watches launches and lifetime deals across JVZoo/WarriorPlus.
+Wants to know what launches today and this week, with countdowns.
+Launching Today, Upcoming Launches, Lifetime Deals.
+Admin / Founder Naresh
+Curates products, sets rankings, manages launches and affiliate links.
+Wants a simple, fast admin to add/edit products without touching code.
+/admin dashboard.
+
+4. User Journeys
+Journey A — Discovery to affiliate click (primary revenue path)
+User lands on the homepage from search/social and sees the 3D hero + #1 pick.
+They scan Trending and Best-of category cards, and tap a product card.
+The product page loads with rating, editor score, pros/cons, pricing, and FAQ.
+User taps 'Visit Deal', which hits /go/[slug].
+The redirect route logs the click and forwards to the stored affiliate URL.
+Journey B — Launch tracker
+User visits /launches or the 'Launching Today' homepage section.
+They see timezone-adjusted launch times and optional countdowns.
+They tap 'View Review' to read the page, then 'Visit Deal' to buy on launch.
+Journey C — Category browsing + filtering
+User opens /categories/ai-tools from the nav or a category card.
+They filter by pricing type and sort by highest rated.
+They open a product and convert via the affiliate CTA.
+Journey D — Admin publishing
+Naresh logs into /admin securely.
+Adds a product: name, logo, description, category, affiliate URL, launch date, rating, rank.
+Marks it featured/trending/top-pick and publishes.
+The public product page and redirect become live automatically.
+
+5. Information Architecture
+The site is organized around three content types — Products, Categories, and Launches — plus supporting trust/legal pages. Every product is reachable from at least three internal links (homepage section, category page, related-products) to avoid orphan pages and strengthen SEO.
+Top-level structure
+Area
+Purpose
+Primary routes
+Home
+Curated discovery entry point
+/
+Products
+Full directory + individual pages
+/products, /products/[slug]
+Categories
+Topic hubs
+/categories, /categories/[slug]
+Launches
+Launch calendar
+/launches
+Rankings
+Top Rated & methodology
+/top-rated, /ranking-methodology
+Affiliate
+Safe redirect layer
+/go/[slug]
+Trust/Legal
+Credibility & compliance
+/about, /contact, /affiliate-disclosure, /editorial-policy, /privacy, /terms
+Admin
+Private content management
+/admin/*
+
+6. Homepage Requirements
+The homepage is a curated storefront, not a wall of links. Each section is a reusable server component pulling published products from Supabase. Sections render top-to-bottom in the order below.
+Section 1 — Header / Navigation
+Purpose: Persistent, accessible navigation and search.
+User Story: As a visitor, I can reach any major area of the site from any page.
+Priority:  P0    Scope: MVP
+Contents: DailySoftwareAI logo, Home, Products, Categories, Launch Calendar, Top Rated, About, Search, and an optional 'Submit a Product' CTA.
+Desktop: horizontal nav, sticky on scroll with a subtle shadow after ~40px.
+Mobile: hamburger opens a MobileMenu drawer; search collapses into an icon that expands a field.
+Active state: current section highlighted via aria-current and an accent underline.
+Accessibility: nav is a <nav> landmark, links are keyboard-focusable with visible focus rings, drawer traps focus and closes on Esc.
+Section 2 — Hero (keep existing 3D hero)
+Purpose: Immediate positioning and two clear CTAs.
+Priority:  P0    Scope: MVP
+Suggested copy
+Headline: “Discover the Best Software & AI Tools — Before Everyone Else”
+Sub: Daily rankings, new launches, expert picks, and software deals for creators, marketers, founders, and businesses.
+Primary CTA: Explore Top Products → scrolls to / links to Trending. Secondary CTA: View New Launches → /launches.
+Do not rebuild the 3D hero. Lazy-load/defer the 3D canvas so it never blocks Largest Contentful Paint; render a lightweight static fallback for reduced-motion users and low-power devices.
+Responsive: 3D scaled/simplified on mobile; text remains crisp and centered; CTAs stack vertically under ~640px.
+Section 3 — #1 Ranked Product / Editor's Pick
+Purpose: Spotlight the single best-converting recommendation.
+User Story: As a visitor I instantly see the one product the editor recommends most today.
+Priority:  P0    Scope: MVP
+Displays: rank number, '#1 Today' badge, logo, name, short description, rating, editor score, category, launch date, pricing/deal type, 'Read Full Review' CTA, and 'Visit Deal' CTA (affiliate redirect).
+Desktop: two-column feature card — media/logo left, details + CTAs right.
+Mobile: single column, logo on top, CTAs full-width and sticky-friendly.
+Admin selects #1 by setting is_top_pick=true (only one active) OR current_rank=1 in the daily ranking. Data loaded server-side via a single query ordered by rank.
+Section 4 — Trending Software Today
+Purpose: Show momentum with a ranked card row.
+Priority:  P0    Scope: MVP
+Each card: rank, logo, product name, tagline, category, rating, pricing type, launch date (if relevant), 'View Product', 'Visit Deal'.
+Data: products where is_trending=true, ordered by current_rank; horizontal scroll on mobile, grid on desktop.
+Section 5 — Launching Today
+Purpose: Highlight products launching in the current day.
+Priority:  P1    Scope: MVP
+Each entry: logo, name, launch date, launch time, affiliate marketplace, category, optional countdown, 'View Review', 'Visit Deal'.
+Timezone handling
+Store launch_date, launch_time, and launch_timezone (IANA name, e.g. 'America/New_York'). Convert to the visitor's local time on the client using Intl.DateTimeFormat. 'Today' is computed in the visitor's timezone so the section is accurate globally.
+Section 6 — Upcoming Software Launches
+Purpose: Let deal-hunters plan ahead.
+Priority:  P1    Scope: MVP
+Buckets: Tomorrow, This Week, Next Week — sorted ascending by launch datetime.
+Empty state: friendly 'No launches scheduled yet — check back soon' card.
+Expired launches automatically move out of 'upcoming' once their datetime passes (computed at query/render time).
+Section 7 — Latest Software & AI Tools (filterable grid)
+Purpose: Browsable grid of newest tools.
+Priority:  P1    Scope: MVP
+Filters: category, pricing type, launch status, rating, newest, trending. On MVP, ship category + newest first; add pricing/rating filters in Phase 2.
+Sections 8–12 — Curated 'Best of' & Deals
+Section
+Contents
+Data rule
+Priority
+Best AI Tools
+Category cards
+category = ai-tools, top rated
+ P1 
+Best Automation Tools
+Category cards
+category = automation
+ P1 
+Best Marketing Software
+Sub: SEO, email, lead-gen, social, funnels, CRM
+marketing family
+ P1 
+Lifetime Deals
+Deal cards
+pricing_type = lifetime / has deal
+ P1 
+Top Rated This Month
+Ranked cards
+monthly ranking or editor_score
+ P1 
+Section 13 — About the Founder (Naresh)
+Purpose: Establish credibility and E-E-A-T.
+Priority:  P0    Scope: MVP
+Tone & honesty guardrails
+Position Naresh as a software-focused affiliate marketer and AI Automation Engineer with practical hands-on experience across AI tools, automation workflows, SaaS products, CRM systems, AI agents, workflow automation, and software integrations.
+Keep it credible and personal. Do NOT invent years of experience, customer counts, revenue, awards, or certifications.
+Section 14 — Newsletter
+Purpose: Capture email for launch alerts.
+Priority:  P1    Scope: MVP
+Fields: email + Subscribe button. Value prop: 'Get the best new software, deals & launch alerts — weekly, no spam.' Privacy-friendly wording linking to /privacy. Store in newsletter_subscribers.
+Section 15 — Footer
+Links: About, Contact, Products, Categories, Latest Launches, Top Rated, Affiliate Disclosure, Editorial Policy, Ranking Methodology, Privacy Policy, Terms & Conditions. Include a short affiliate disclosure line site-wide.
+
+7. Product Directory Requirements
+Purpose: A single browsable, filterable index of all products at /products.
+User Story: As a visitor I can search, filter, sort, and page through every product.
+Priority:  P0    Scope: MVP
+Features & MVP split
+Feature
+Behavior
+MVP?
+Search
+Name / keyword match
+MVP (basic)
+Category filter
+Multi-select by category
+MVP
+Pricing filter
+free / freemium / paid / lifetime
+Phase 2
+Rating filter
+min rating threshold
+Phase 2
+Sorting
+newest, highest rated, trending, recently launched, upcoming, editor score
+MVP: newest + highest rated
+Pagination
+Page-based (?page=n), 12–24 per page
+MVP
+Infinite loading
+Load-more button
+Phase 2
+Responsive grid
+1/2/3/4 columns by breakpoint
+MVP
+Beginner note
+Start with page-based pagination and URL query params (?category=&sort=&page=). It's simpler, SEO-friendly, and shareable. Infinite scroll can come later.
+
+8. Product Page Requirements
+Purpose: Every product auto-gets a rich, original, SEO-friendly page at /products/[slug].
+User Story: As a visitor I get an honest, complete review that helps me decide, then click through to the deal.
+Priority:  P0    Scope: MVP
+Exact section order (top → bottom)
+#
+Section
+Notes
+1
+Breadcrumbs
+Home / Category / Product
+2
+Product Hero
+Logo, name, tagline, category, rating, editor score, current rank, primary 'Visit Deal' CTA
+3
+Affiliate disclosure (short)
+Above/near first CTA
+4
+Hero / featured image
+next/image, optimized
+5
+Full description
+Original editorial content
+6
+Key features
+Bulleted
+7
+Best for
+Who should use it
+8
+Pros & Cons
+Two-column ProsCons component
+9
+Pricing / deal info
+pricing_type + price_text
+10
+Screenshots
+Gallery (product_images)
+11
+Launch info
+Date, time, timezone, marketplace
+12
+FAQ
+3–6 Q&A (FAQ schema)
+13
+Alternatives
+product_alternatives
+14
+Related products
+Same category
+15
+Author + Last updated
+Naresh + updated_at
+16
+Sticky affiliate CTA
+Mobile bottom bar / desktop side
+Layout & behavior
+Desktop: main content column + sticky right rail holding the affiliate CTA and quick facts (rating, score, pricing).
+Mobile: single column; a sticky bottom 'Visit Deal' bar appears after the user scrolls past the hero.
+Affiliate CTA always routes through /go/[slug], never a raw affiliate URL, and carries rel="sponsored nofollow noopener" and target="_blank".
+SEO: page is statically generated (generateStaticParams) and revalidated on a schedule; unique title/description; Product + Review + FAQ structured data only where genuinely valid.
+Avoid thin pages
+Every product page must contain original, useful content — do not paste vendor descriptions verbatim. Minimum: original intro, honest pros/cons, 'best for', and a short FAQ. See Section 16 (SEO).
+
+9. Category Requirements
+Purpose: Topic hubs at /categories/[slug] that rank in search and organize products.
+Priority:  P0    Scope: MVP
+Recommended initial categories
+AI Tools, Automation, SEO, Email Marketing, CRM, Lead Generation, Social Media, Video, Design, Productivity, E-commerce, Analytics, Developer Tools, Sales, Customer Support.
+Requirements
+URL: /categories/[slug] (e.g. /categories/ai-tools, /categories/automation, /categories/seo).
+Each category has an original 2–4 sentence description (unique, useful) rendered above the grid.
+Breadcrumbs: Home / Categories / [Category]. Filtering + sorting reuse the directory components. Pagination page-based.
+Category SEO: unique title/description per category, self-referencing canonical, internal links to top products and related categories.
+
+10. Launch Calendar Requirements
+Purpose: A dedicated /launches page tracking launch timing.
+Priority:  P1    Scope: MVP
+Buckets: Launching Today, Tomorrow, This Week, Upcoming, Recently Launched.
+Each entry: product, logo, launch date, launch time, timezone, marketplace, category, 'View Review' link, affiliate CTA.
+Timezone conversion: store IANA timezone; convert to visitor local time client-side; label with the local zone.
+Sorting: ascending by launch datetime within each bucket.
+Past launches move to 'Recently Launched' automatically; countdown timers only show for future launches and hide at zero.
+Empty states per bucket with a friendly message.
+
+11. Ranking Requirements
+Purpose: Transparent, honest rankings that visitors can trust.
+Priority:  P0    Scope: MVP
+Supported ranking types
+Daily, Weekly, Monthly, Editor's Pick, Trending, Top Rated.
+Two approaches
+Approach
+How it works
+Pros
+Cons
+A. Manual
+Admin sets current_rank / flags per product
+Simple, full editorial control, ships this week
+Doesn't scale to thousands without effort
+B. Automated
+Score from clicks, rating, recency, editor_score
+Scales, feels dynamic
+Needs data + logic; risk of gaming
+MVP recommendation
+Use Approach A (manual) for launch: the admin sets editor_score and current_rank, and flags is_trending / is_top_pick. It's honest, controllable, and buildable in a week. Layer in a lightweight automated score (Approach B) in Phase 2 using logged click data.
+Public Ranking Methodology page
+Explain in plain language how rankings are decided (editorial judgment + criteria like features, value, ease of use, and — later — popularity).
+State clearly that rankings are independent of affiliate commissions.
+If sponsored placements are ever introduced, they MUST be visibly labeled 'Sponsored' and separated from editorial rankings.
+
+12. Affiliate Link Requirements
+Purpose: A safe, trackable redirect layer so raw affiliate URLs are never exposed and every click is logged.
+User Story: As the site owner I want every 'Visit Deal' click routed through my domain, logged, and safely forwarded.
+Priority:  P0    Scope: MVP
+Redirect structure
+Pattern: dailysoftwareai.com/go/[product-slug]  —  e.g. /go/example-product.
+Flow
+User clicks 'Visit Deal'.
+Request reaches the /go/[slug] route (Next.js route handler / server).
+System looks up the product by slug and finds its active affiliate URL.
+System records a permitted click event (timestamp, product id, referrer/UTM where appropriate).
+System issues a 302 redirect to the stored affiliate URL.
+Implementation (Next.js + Supabase)
+Create app/go/[slug]/route.ts as a server route handler. It runs on the server, so the affiliate URL never ships to the browser HTML.
+Query Supabase for the product + its affiliate_links row (status = active). Insert a row into click_events. Then return Response.redirect(url, 302).
+Storage: keep affiliate URLs in an affiliate_links table keyed by product_id and network, with a status column so offers can be disabled.
+Required behaviors & safeguards
+Concern
+Requirement
+Click logging
+Log timestamp, product_id, network; store referrer & UTM only where legally/technically appropriate
+UTM handling
+Preserve/append UTM params if the network allows; never strip required tracking params
+Bot filtering
+Optionally skip logging for known bots (user-agent + no-JS heuristics) — Phase 2
+Broken link handling
+If URL missing/invalid, show a friendly 'offer unavailable' page, not a crash
+Disabled offers
+If status != active, do not redirect; show 'this deal has ended' with alternatives
+Open-redirect prevention
+Only redirect to URLs stored in the DB; never redirect to a URL taken from user input/query
+URL validation
+Validate stored URLs are absolute https and on an allow-list of known networks
+Security
+rel="sponsored nofollow noopener", target="_blank" on outbound links
+Compliance
+The implementation must respect each affiliate network's terms of service and required disclosures (JVZoo, WarriorPlus, direct programs, etc.). Show an affiliate disclosure near every affiliate CTA and on a dedicated /affiliate-disclosure page.
+
+13. Technical Architecture
+13.1 Recommended stack & rationale
+Layer
+Tech
+Why / problem solved
+MVP?
+Complexity
+Frontend
+Next.js (App Router)
+SSR/SSG for SEO, dynamic routes for product pages, route handlers for /go redirects
+Required
+Medium
+Language
+TypeScript
+Fewer runtime bugs; safer for a beginner via autocomplete & types
+Required
+Low
+Styling
+Tailwind CSS
+Fast, consistent design system matching the premium hero
+Required
+Low
+Backend/DB
+Supabase + PostgreSQL
+Managed Postgres, Auth, Storage, RLS — no server to run
+Required
+Medium
+Hosting
+Vercel
+First-class Next.js hosting, previews, env vars, edge
+Required
+Low
+Images
+Supabase Storage
+Store logos/screenshots; simple + included
+Required
+Low
+Images (later)
+Cloudinary
+Advanced transforms/CDN if image load grows
+Postpone
+Low
+Analytics
+GA4 + Search Console
+Traffic, behavior, indexing
+Required (basic)
+Low
+Automation
+n8n
+Import, link checks, ranking updates
+Postpone (Phase 2/3)
+Medium
+Security considerations (per layer)
+Supabase Row Level Security (RLS) on every table; public read only for published products, writes restricted to authenticated admin.
+Secrets in Vercel/Supabase environment variables — never in the repo. Use the anon key on the client, service role key only on the server.
+13.2 Do we even need a backend?
+Option
+Description
+Fit for this project
+A. Static + hardcoded
+Products hardcoded in the frontend
+Fast to start but doesn't scale, no admin, painful for many products/launches — NOT recommended
+B. Next.js + Supabase
+Dynamic pages from a Postgres DB with admin
+Best balance: scalable, SEO-friendly, admin without code — RECOMMENDED
+C. Headless CMS
+Sanity/Contentful/Strapi + Next.js
+Powerful but extra service to learn & wire in a week — overkill for MVP
+Final recommendation: Option B
+Given a one-week deadline, a beginner developer, many products, SEO needs, rankings, launch dates, affiliate links, and future scale — Next.js + Supabase is the sweet spot. Supabase gives a real database, auth, and storage with minimal setup, and Next.js delivers SEO-friendly dynamic pages. Upgrade path: add a headless CMS or automated ranking later without re-architecting.
+13.3 Rendering strategy (beginner-friendly)
+Route
+Strategy
+Why
+/ (home)
+SSG + periodic revalidate (ISR)
+Fast, SEO-friendly, refreshes for new picks
+/products/[slug]
+SSG via generateStaticParams + ISR
+Great SEO, cached, updates on revalidate
+/categories/[slug]
+SSG + ISR
+Same as above
+/products, /launches
+Server-rendered (dynamic) or ISR
+Reflects filters/sorting & fresh launch times
+/go/[slug]
+Dynamic route handler (no caching)
+Must run per-click to log + redirect
+/admin/*
+Dynamic, auth-gated
+Private, never cached/indexed
+Data access & mutations
+Reads: server components query Supabase directly (service role on server only) or the anon key with RLS.
+Writes (admin add/edit): use Next.js Server Actions or a small API route protected by the admin session.
+
+14. Database Schema (PostgreSQL / Supabase)
+Normalized design: products hold core fields; categories are many-to-many via a join table; affiliate links, images, alternatives, rankings, and clicks live in their own tables. All ids are uuid default gen_random_uuid(). Timestamps default now().
+products
+Core product record.
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK, gen_random_uuid()
+Primary key
+name
+text
+No
+—
+Product name
+slug
+text
+No
+UNIQUE, indexed
+URL slug
+tagline
+text
+Yes
+—
+One-liner
+short_description
+text
+Yes
+—
+Card/summary text
+full_description
+text
+Yes
+—
+Editorial body (original)
+logo_url
+text
+Yes
+—
+Logo image
+featured_image_url
+text
+Yes
+—
+Hero image
+official_website_url
+text
+Yes
+—
+Vendor site
+launch_date
+date
+Yes
+indexed
+Launch day
+launch_time
+time
+Yes
+—
+Launch time
+launch_timezone
+text
+Yes
+'UTC'
+IANA tz name
+pricing_type
+text
+Yes
+check(free/freemium/paid/lifetime)
+Pricing model
+price_text
+text
+Yes
+—
+Human price/deal
+rating
+numeric(2,1)
+Yes
+check 0–5
+User/star rating
+editor_score
+numeric(3,1)
+Yes
+check 0–10
+Editorial score
+current_rank
+int
+Yes
+indexed
+Manual rank
+affiliate_network
+text
+Yes
+—
+e.g. jvzoo
+is_featured
+boolean
+No
+false
+Featured flag
+is_trending
+boolean
+No
+false
+Trending flag
+is_top_pick
+boolean
+No
+false
+#1 pick flag
+status
+text
+No
+'draft' check(draft/published/archived)
+Lifecycle
+seo_title
+text
+Yes
+—
+Meta title
+seo_description
+text
+Yes
+—
+Meta description
+created_at
+timestamptz
+No
+now()
+Created
+updated_at
+timestamptz
+No
+now()
+Updated
+published_at
+timestamptz
+Yes
+—
+Publish time
+categories
+Topic hubs.
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK
+Key
+name
+text
+No
+—
+Display name
+slug
+text
+No
+UNIQUE, indexed
+URL slug
+description
+text
+Yes
+—
+Original hub copy
+seo_title
+text
+Yes
+—
+Meta title
+seo_description
+text
+Yes
+—
+Meta description
+product_categories
+Join table (many-to-many).
+Column
+Type
+Null?
+Default / Key
+Purpose
+product_id
+uuid
+No
+FK→products.id
+Product
+category_id
+uuid
+No
+FK→categories.id
+Category
+(product_id, category_id)
+—
+—
+PK composite
+Uniqueness
+affiliate_links
+One or more offers per product.
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK
+Key
+product_id
+uuid
+No
+FK→products.id, indexed
+Owner product
+network
+text
+No
+—
+jvzoo/warriorplus/direct
+url
+text
+No
+—
+Destination (https)
+status
+text
+No
+'active' check(active/disabled)
+Enable/disable
+is_primary
+boolean
+No
+false
+Default offer
+created_at
+timestamptz
+No
+now()
+Created
+rankings
+Optional periodic ranking snapshots (Phase 2-ready).
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK
+Key
+product_id
+uuid
+No
+FK→products.id
+Product
+period
+text
+No
+check(daily/weekly/monthly)
+Ranking period
+rank
+int
+No
+—
+Position
+period_date
+date
+No
+indexed
+Which day/week/month
+click_events
+Affiliate click log.
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK
+Key
+product_id
+uuid
+No
+FK→products.id, indexed
+Clicked product
+affiliate_link_id
+uuid
+Yes
+FK→affiliate_links.id
+Which offer
+clicked_at
+timestamptz
+No
+now(), indexed
+Timestamp
+referrer
+text
+Yes
+—
+Where appropriate
+utm
+jsonb
+Yes
+—
+UTM params
+user_agent
+text
+Yes
+—
+Bot filtering
+admins
+Admin users (or use Supabase auth.users + role).
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK (=auth.users.id)
+Key
+email
+text
+No
+UNIQUE
+Login email
+role
+text
+No
+'admin'
+Role
+newsletter_subscribers
+Email captures.
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK
+Key
+email
+text
+No
+UNIQUE
+Subscriber
+created_at
+timestamptz
+No
+now()
+Signup time
+confirmed
+boolean
+No
+false
+Double opt-in (later)
+product_images
+Screenshots/gallery.
+Column
+Type
+Null?
+Default / Key
+Purpose
+id
+uuid
+No
+PK
+Key
+product_id
+uuid
+No
+FK→products.id, indexed
+Owner
+url
+text
+No
+—
+Image URL
+alt
+text
+Yes
+—
+Alt text
+sort_order
+int
+No
+0
+Ordering
+product_alternatives
+Self-referencing alternatives.
+Column
+Type
+Null?
+Default / Key
+Purpose
+product_id
+uuid
+No
+FK→products.id
+Product
+alternative_id
+uuid
+No
+FK→products.id
+Alternative product
+(product_id, alternative_id)
+—
+—
+PK composite
+Uniqueness
+Indexes to create
+Unique on products.slug & categories.slug; indexes on products.status, products.current_rank, products.launch_date, affiliate_links.product_id, click_events.product_id, click_events.clicked_at.
+
+15. Admin Dashboard Requirements
+Purpose: A simple, secure /admin so Naresh manages products without code.
+Priority:  P0    Scope: MVP
+Capabilities (MVP)
+Log in securely; add / edit / archive products; upload logo & featured image; write descriptions; choose categories; add affiliate URL + network; set launch date/time/timezone; set pricing type; set rating, editor score, rank; toggle featured/trending/top-pick; publish/unpublish; preview page.
+Admin screens
+Screen
+Route
+Purpose
+Priority
+Login
+/admin (or /admin/login)
+Supabase email/password auth
+ P0 
+Products list
+/admin/products
+Table with status, rank, quick actions
+ P0 
+Add product
+/admin/products/new
+Full create form
+ P0 
+Edit product
+/admin/products/[id]/edit
+Update form + preview
+ P0 
+Ranking mgmt
+within edit / list
+Set current_rank, flags
+ P1 
+Launch mgmt
+within edit
+Date/time/timezone
+ P1 
+Affiliate links
+within edit
+Add/disable offers per product
+ P0 
+Keep it simple this week
+A single create/edit form with image upload to Supabase Storage and a products table view is enough for MVP. All admin routes are auth-gated and noindex.
+
+16. SEO Requirements
+Global SEO architecture
+Unique title tags & meta descriptions per page via Next.js Metadata API.
+Canonical URLs (self-referencing) on every page; consistent trailing-slash policy.
+Open Graph + Twitter/X card metadata (title, description, image).
+Dynamic XML sitemap (app/sitemap.ts) including all published products, categories, and static pages; robots.txt (app/robots.ts).
+Breadcrumbs on product & category pages (visual + BreadcrumbList schema).
+Internal linking: related products, category links, and 'alternatives' to avoid orphan pages.
+Structured data (only where valid)
+Schema
+Where
+Rule
+Organization
+Site-wide
+Always
+Product
+Product pages
+When product data is real
+Review / AggregateRating
+Product pages
+ONLY if a genuine editorial review/score exists
+FAQPage
+Product pages
+ONLY if real FAQs are shown
+Person/Author
+Product & about
+For Naresh as author
+BreadcrumbList
+Product & category
+Always where breadcrumbs render
+Page-level SEO
+Homepage: brand + value-prop title, org schema, links to key hubs.
+Product pages: unique title (Name + category + 'Review/Deal'), original description, Product/Review/FAQ schema where valid.
+Category pages: unique 'Best [Category] Software' title + original intro copy.
+Launch/ranking pages: descriptive titles; avoid duplicate boilerplate.
+Avoid Google penalties
+No thin affiliate pages, doorway pages, or mass-generated low-value pages.
+Never copy vendor descriptions verbatim — write original intros, pros/cons, 'best for', and FAQs.
+Prevent duplicate content with canonicals and unique copy per product/category.
+
+17. Security Requirements
+Area
+Requirement
+Priority
+Row Level Security
+Enable RLS on all tables; public can read only published products/categories; writes require admin auth
+ P0 
+Admin auth
+Supabase Auth (email/password); gate all /admin routes via middleware/session check
+ P0 
+Env vars & secrets
+All keys in env vars; service-role key server-only; never commit secrets
+ P0 
+Affiliate URL validation
+Only redirect to stored https URLs on an allow-list of networks
+ P0 
+Open-redirect prevention
+Never redirect to a URL from query/user input
+ P0 
+Input sanitization
+Validate & sanitize all admin inputs; escape rendered HTML
+ P0 
+XSS protection
+Never dangerouslySetInnerHTML with unsanitized content
+ P0 
+CSRF
+Server Actions carry built-in protections; validate origin on mutations
+ P1 
+Rate limiting
+Throttle newsletter signups & /go clicks against abuse
+ P1 
+Admin route protection
+noindex + auth redirect for unauthenticated users
+ P0 
+
+18. Performance Requirements
+Core Web Vitals targets: LCP < 2.5s, CLS < 0.1, INP < 200ms on mobile.
+Images via next/image with width/height set to prevent layout shift; lazy-load below-the-fold images and screenshots.
+The 3D hero must be deferred/lazy-loaded and must not block LCP; provide a static fallback for reduced-motion and low-power devices.
+Caching: use SSG/ISR for product & category pages; cache Supabase reads where possible.
+Database: index slug, status, rank, launch_date; select only needed columns; paginate lists.
+Fonts: use next/font with font-display: swap; preload the primary font; limit weights.
+Mobile: minimize JS on the homepage; keep the 3D canvas off the critical path.
+
+19. Analytics Requirements
+Track
+Product page views, affiliate CTA clicks, outbound deal clicks, search usage, category views, top-product clicks, newsletter conversions.
+Three distinct layers
+Layer
+Tool
+What it captures
+Privacy
+First-party clicks
+click_events table (own DB)
+Every /go redirect: product, time, referrer/UTM
+Owner-controlled; log only permitted data
+Web analytics
+Google Analytics 4
+Traffic, sessions, page views, events
+Respect consent; anonymize where required
+Search visibility
+Search Console
+Impressions, queries, indexing
+Aggregate only
+Privacy
+Add a privacy-friendly notice/consent where required by the visitor's jurisdiction; don't log unnecessary personal data; document data use in /privacy.
+
+20. Legal & Trust Requirements
+Page
+Route
+Why it matters
+Priority
+About
+/about
+Credibility & E-E-A-T (Naresh)
+ P0 
+Contact
+/contact
+Trust + support channel
+ P0 
+Affiliate Disclosure
+/affiliate-disclosure
+Required by law/networks; builds trust
+ P0 
+Editorial Policy
+/editorial-policy
+Explains independence & review process
+ P1 
+Ranking Methodology
+/ranking-methodology
+Transparency on how ranks are set
+ P0 
+Privacy Policy
+/privacy
+Data handling / analytics disclosure
+ P0 
+Terms & Conditions
+/terms
+Usage terms & liability
+ P0 
+Not legal advice
+Legal text should be reviewed for the applicable jurisdictions and should not be treated as professional legal advice. Include a clear affiliate disclosure near every affiliate CTA.
+
+21. Component Inventory
+Reusable components with purpose, key props, data source, and mobile behavior.
+Component
+Purpose
+Key props
+Data source
+Mobile
+Header
+Top nav + search
+activeRoute
+static/nav config
+Hamburger drawer
+MobileMenu
+Slide-in nav
+isOpen, onClose
+nav config
+Full-screen drawer
+Hero
+Existing 3D hero
+—
+static
+Simplified 3D
+TopRankedProduct
+#1 feature card
+product
+Supabase (top_pick)
+Single column
+ProductCard
+Grid/list card
+product, rank?
+Supabase
+1-col stack
+ProductGrid
+Responsive grid
+products[]
+Supabase
+1/2 cols
+TrendingSection
+Trending row
+products[]
+is_trending
+H-scroll
+LaunchCard
+Launch entry
+product, tz
+launches query
+Stacked
+UpcomingLaunches
+Bucketed launches
+buckets
+launch_date
+Stacked
+CategoryCard
+Category tile
+category
+categories
+2-up
+RatingBadge
+Star/score badge
+rating
+prop
+Inline
+RankBadge
+Rank pill (#1)
+rank
+prop
+Inline
+AffiliateCTA
+Visit Deal button
+slug
+/go/[slug]
+Full-width / sticky
+SearchBar
+Search input
+onSearch
+query param
+Expandable
+FilterBar
+Filters + sort
+filters, sort
+query params
+Collapsible sheet
+NewsletterForm
+Email capture
+—
+subscribers table
+Full-width
+FounderSection
+About Naresh
+—
+static
+Stacked
+Footer
+Links + disclosure
+—
+static
+Stacked columns
+Breadcrumbs
+Nav trail + schema
+items[]
+prop
+Wraps/scrolls
+ProductHero
+Product page header
+product
+Supabase
+Stacked + sticky CTA
+ProsCons
+Two-col pros/cons
+pros[], cons[]
+prop
+Stacked
+FAQ
+Accordion + schema
+faqs[]
+prop
+Accordion
+RelatedProducts
+Related grid
+products[]
+same category
+H-scroll
+
+22. Route Map
+Route
+Purpose
+Render
+Priority
+/
+Homepage
+SSG + ISR
+ P0 
+/products
+Directory
+Dynamic/ISR
+ P0 
+/products/[slug]
+Product page
+SSG + ISR
+ P0 
+/categories
+Category index
+SSG
+ P0 
+/categories/[slug]
+Category hub
+SSG + ISR
+ P0 
+/launches
+Launch calendar
+Dynamic/ISR
+ P1 
+/top-rated
+Top rated list
+SSG + ISR
+ P1 
+/about
+About + founder
+Static
+ P0 
+/contact
+Contact
+Static
+ P0 
+/affiliate-disclosure
+Disclosure
+Static
+ P0 
+/editorial-policy
+Editorial policy
+Static
+ P1 
+/ranking-methodology
+Methodology
+Static
+ P0 
+/privacy
+Privacy policy
+Static
+ P0 
+/terms
+Terms
+Static
+ P0 
+/go/[slug]
+Affiliate redirect
+Dynamic handler
+ P0 
+/admin
+Admin login/home
+Dynamic (auth)
+ P0 
+/admin/products
+Products list
+Dynamic (auth)
+ P0 
+/admin/products/new
+Add product
+Dynamic (auth)
+ P0 
+/admin/products/[id]/edit
+Edit product
+Dynamic (auth)
+ P0 
+
+23. MVP Scope (This Week)
+Only what's needed to launch a polished, trustworthy, revenue-ready site.
+Homepage with existing 3D hero + #1 pick, trending, launching today, category showcases, founder, newsletter, footer. P0 
+Products directory with basic search + category filter + sort (newest/highest rated) + pagination. P0 
+Dynamic product pages (full template) generated from Supabase. P0 
+Category pages with original intro copy + filtering + breadcrumbs. P0 
+Affiliate redirect system /go/[slug] with click logging + open-redirect prevention. P0 
+Simple secure admin: login, product list, add/edit form, image upload, affiliate links, publish. P0 
+SEO essentials: metadata, canonicals, sitemap, robots, OG, Product/Review/FAQ schema where valid. P0 
+Legal/trust pages: about, contact, affiliate disclosure, ranking methodology, privacy, terms. P0 
+GA4 + Search Console + first-party click logging. P0 
+Responsive, accessible, deployed to Vercel on the production domain. P0 
+24. Phase 2 Scope (After Launch)
+Pricing & rating filters; infinite/load-more; advanced search (Postgres full-text). P1 
+Launch countdowns everywhere; weekly/monthly ranking snapshots. P1 
+Lightweight automated ranking from click data. P1 
+Bot filtering on clicks; UTM analytics dashboards. P1 
+Newsletter double opt-in + automated sends. P1 
+Cloudinary if image load justifies it. P1 
+n8n automations (import, link checks, enrichment). P1 
+25. Phase 3 Scope (Advanced Platform)
+User accounts, saved lists, and reviews. P2 
+Full automated daily ranking engine with anti-gaming. P2 
+Sponsored placements (clearly labeled) + ad management. P2 
+API for partners; multi-author editorial workflow. P2 
+A/B testing of CTAs; personalization; recommendation engine. P2 
+Programmatic launch imports via n8n from JVZoo/WarriorPlus APIs. P2 
+
+26. Day-by-Day Development Plan
+A realistic one-week plan for a beginner. Each day ends with something visible and testable.
+Day
+Focus
+Tasks
+End-of-day result
+1
+Foundations
+Next.js+TS+Tailwind project; Supabase project; run schema SQL; env vars; connect DB; seed 3–5 test products
+App runs, DB connected, test data queryable
+2
+Core UI + home
+Build ProductCard, ProductGrid, Header, Footer; assemble homepage sections pulling real data; match hero style
+Homepage renders live products
+3
+Dynamic pages
+Product page template + generateStaticParams; category pages; breadcrumbs; dynamic routing
+Every product & category has a live page
+4
+Affiliate + admin + launches
+/go/[slug] redirect + click logging; admin login + add/edit form + image upload; launch calendar buckets + timezone
+Can add products via admin; deals redirect & log
+5
+SEO, polish, ship
+Metadata, sitemap, robots, schema; legal pages; mobile/responsive pass; accessibility; testing; deploy to Vercel + domain
+Live, indexed, tested production site
+If time runs short
+Cut in this order: automated ranking (do manual), advanced filters (keep category+sort), countdowns, newsletter automation. Never cut: affiliate redirect safety, disclosures, product pages, and mobile responsiveness.
+
+27. API / Server Action Requirements
+Concern
+Recommendation
+Why (beginner-friendly)
+Reading products/categories
+Server Components query Supabase directly
+No API layer needed; simplest path
+Static pages
+generateStaticParams + ISR for products/categories
+Fast + SEO + auto-refresh
+Dynamic lists (directory, launches)
+Server-render with query params or ISR
+Reflects filters & fresh times
+Admin create/edit
+Next.js Server Actions (auth-gated)
+No separate backend; forms post to functions
+Affiliate redirect
+Route handler app/go/[slug]/route.ts
+Runs per request to log + redirect
+Newsletter signup
+Server Action or small API route + rate limit
+Simple insert into subscribers
+
+28. Error & Empty States
+Situation
+Behavior
+Product not found
+404 page with search + popular products links
+Category empty
+'No products here yet' + link to all products
+No upcoming launches
+Friendly 'Nothing scheduled — check back soon' card
+Affiliate link unavailable/disabled
+'This deal has ended' page with alternatives, no redirect
+Database error
+Graceful error boundary; retry; never expose stack traces
+Image missing
+Placeholder logo/skeleton; alt text retained
+Search no results
+'No matches — try another term' + suggested categories
+Expired offer
+Move out of active sections; show as recently launched/ended
+
+29. Responsive, Accessibility, Automation, Testing & Sign-off
+29.1 Responsive Design
+Breakpoint
+Target
+Grid / nav behavior
+Mobile (<640px)
+Phones
+1-col cards; hamburger nav; sticky CTA bar; H-scroll rows
+Tablet (640–1024px)
+Tablets
+2-col cards; condensed nav
+Laptop (1024–1280px)
+Laptops
+3-col cards; full horizontal nav
+Desktop (>1280px)
+Large screens
+3–4-col cards; product page side rail
+29.2 Accessibility
+Semantic HTML (nav, main, header, footer, headings in order).
+Full keyboard navigation with visible focus states.
+Accessible buttons/links (real elements, aria-labels where needed).
+Alt text on all images; decorative images marked empty alt.
+Sufficient color contrast (WCAG AA).
+Labels tied to every form field.
+Respect prefers-reduced-motion (disable heavy 3D/animation).
+29.3 Future n8n Automation (Phase 2/3 — not required now)
+n8n can later automate: product import, launch-date updates, expired-offer checks, broken affiliate-link checks, ranking updates, newsletter generation, social content, product data enrichment, and admin notifications. None of these are needed for the one-week MVP.
+29.4 Testing Checklist
+Area
+Checks
+Desktop
+All pages render; nav works; grids align
+Mobile
+Drawer nav; sticky CTA; no overflow; tap targets ≥44px
+Tablet
+2-col layouts; nav condenses correctly
+Affiliate redirects
+/go/[slug] logs a click and lands on correct URL; disabled offer handled
+Product pages
+All sections render; schema valid; canonical present
+Launch dates
+Timezone conversion correct; buckets/countdowns accurate
+Rankings
+#1 pick & trending reflect admin settings
+Forms
+Newsletter validates + stores; admin forms save
+Search
+Returns relevant results; empty state works
+SEO
+Titles/descriptions unique; sitemap & robots reachable; OG previews
+Performance
+Core Web Vitals pass on mobile; hero not blocking LCP
+Accessibility
+Keyboard nav; contrast; alt text; labels
+Admin security
+Unauthed users blocked from /admin; RLS enforced
+29.5 Definition of Done
+Homepage works on desktop and mobile. P0 
+Products load from the database. P0 
+Dynamic product pages work for every product. P0 
+Category pages work with filtering + breadcrumbs. P0 
+Affiliate redirects work and log clicks safely (no open redirect). P0 
+Affiliate disclosures present near CTAs and on the disclosure page. P0 
+SEO metadata, canonicals, sitemap, and robots work. P0 
+Structured data validates where used. P0 
+Admin is protected; RLS enforced; no secrets exposed. P0 
+No broken links or broken images. P0 
+GA4 + Search Console + click logging active. P0 
+Production deployment on the live domain succeeds. P0 
+29.6 Developer Handoff Checklist
+Repo with README: setup steps, env var list, and run commands.
+Supabase schema SQL committed + instructions to apply it.
+Environment variables documented (anon key, service role, GA id) — values in Vercel, not in repo.
+Seed/sample data script for local testing.
+Deployment notes for Vercel + custom domain + revalidation settings.
+List of what's MVP vs deferred (Phase 2/3) so scope is clear.
+Contact/owner (Naresh) and where affiliate links are managed (admin).
+
+Guiding principle
+When ideal architecture conflicts with the one-week deadline, choose the simpler implementation and document the upgrade path. Ship a polished, honest, safe MVP first; scale features in Phase 2 and 3.
