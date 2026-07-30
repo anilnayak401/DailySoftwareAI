@@ -223,7 +223,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                     alt={`${product.name} logo`}
                     fill
                     className="object-contain p-1"
-                    unoptimized={logoSrc.includes('favicons') || logoSrc.includes('iconify')}
+                    unoptimized={logoSrc.includes('/api/') || logoSrc.includes('favicons') || logoSrc.includes('iconify')}
                   />
                 </div>
               )}
@@ -258,10 +258,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 priority
                 sizes="(max-width: 1024px) 100vw, 65vw"
                 className="object-cover"
-                unoptimized={screenshotSrc.includes('thum.io') || screenshotSrc.includes('favicons')}
+                unoptimized={screenshotSrc.includes('/api/') || screenshotSrc.includes('thum.io') || screenshotSrc.includes('favicons')}
               />
             </div>
           )}
+
 
 
           {/* 5. Full Description */}

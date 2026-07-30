@@ -46,7 +46,7 @@ export function TopRankedProduct({ product }: TopRankedProductProps) {
                   fill
                   sizes="(max-width: 1024px) 100vw, 40vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  unoptimized={screenshotSrc.includes('thum.io') || screenshotSrc.includes('favicons')}
+                  unoptimized={screenshotSrc.includes('/api/') || screenshotSrc.includes('thum.io') || screenshotSrc.includes('favicons')}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-indigo-500 dark:text-indigo-400 bg-indigo-950/30">
@@ -75,10 +75,11 @@ export function TopRankedProduct({ product }: TopRankedProductProps) {
                         alt={`${product.name} logo`}
                         fill
                         className="object-contain p-1"
-                        unoptimized={logoSrc.includes('favicons') || logoSrc.includes('iconify')}
+                        unoptimized={logoSrc.includes('/api/') || logoSrc.includes('favicons') || logoSrc.includes('iconify')}
                       />
                     </div>
                   )}
+
 
                   <div>
                     <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-100">{product.name}</h3>

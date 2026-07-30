@@ -76,7 +76,8 @@ export function ProductCard({ product, featured = false, className }: ProductCar
                 fill
                 sizes="48px"
                 className="object-contain p-1 rounded-lg"
-                unoptimized={logoSrc.includes('favicons') || logoSrc.includes('iconify')}
+                unoptimized={logoSrc.includes('/api/') || logoSrc.includes('favicons') || logoSrc.includes('iconify')}
+
               />
             ) : (
               <Sparkles size={20} className="text-indigo-500 dark:text-indigo-400" />
