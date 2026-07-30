@@ -6,7 +6,7 @@ import { Product } from '@/lib/types';
 import { RatingBadge } from './RatingBadge';
 import { RankBadge } from './RankBadge';
 import { AffiliateCTA } from './AffiliateCTA';
-import { cn } from '@/lib/utils';
+import { cn, getProductLogoUrl } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -16,6 +16,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product, featured = false, className }: ProductCardProps) {
   const primaryCategory = product.categories?.[0]?.name || 'Software';
+  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url);
+
 
   // Tinted micro-pill styling based on pricing type
   const getPricingPillClass = (pricing?: string | null) => {
@@ -66,18 +68,20 @@ export function ProductCard({ product, featured = false, className }: ProductCar
         {/* Product Identity Row */}
         <div className="flex items-start gap-3.5 mb-3">
           <div className="relative w-12 h-12 rounded-xl border border-slate-200/60 dark:border-zinc-800 shadow-xs overflow-hidden p-1 bg-white dark:bg-zinc-900 flex-shrink-0 flex items-center justify-center">
-            {product.logo_url ? (
+            {logoSrc ? (
               <Image
-                src={product.logo_url}
+                src={logoSrc}
                 alt={`${product.name} logo`}
                 fill
                 sizes="48px"
-                className="object-cover rounded-lg"
+                className="object-contain p-1 rounded-lg"
+                unoptimized={logoSrc.includes('favicons') || logoSrc.includes('iconify')}
               />
             ) : (
               <Sparkles size={20} className="text-indigo-500 dark:text-indigo-400" />
             )}
           </div>
+
 
           <div className="min-w-0 flex-1">
             <Link

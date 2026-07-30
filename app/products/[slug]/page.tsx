@@ -23,7 +23,8 @@ import { ProsCons } from '@/components/ui/ProsCons';
 import { FAQAccordion } from '@/components/ui/FAQAccordion';
 import { ImageGallery } from '@/components/ui/ImageGallery';
 import { ProductCard } from '@/components/ui/ProductCard';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDate, formatTime, getProductLogoUrl, getProductScreenshotUrl } from '@/lib/utils';
+
 
 export const revalidate = 3600;
 
@@ -109,6 +110,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const primaryCategory = product.categories?.[0] || { name: 'AI Tools', slug: 'ai-tools' };
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailysoftwareai.com';
+  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url);
+  const screenshotSrc = getProductScreenshotUrl(product.featured_image_url, product.official_website_url);
+
 
   const defaultPros = [
     'Intuitive, modern user interface requiring zero learning curve',
@@ -211,9 +215,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
 
             <div className="flex items-start gap-4 mb-4">
-              {product.logo_url && (
-                <div className="relative w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 overflow-hidden flex-shrink-0">
-                  <Image src={product.logo_url} alt="" fill className="object-cover" />
+              {logoSrc && (
+                <div className="relative w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 overflow-hidden flex-shrink-0 p-1 flex items-center justify-center">
+                  <Image
+                    src={logoSrc}
+                    alt={`${product.name} logo`}
+                    fill
+                    className="object-contain p-1"
+                    unoptimized={logoSrc.includes('favicons') || logoSrc.includes('iconify')}
+                  />
                 </div>
               )}
               <div>
@@ -238,18 +248,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
 
           {/* 4. Featured Hero Image */}
-          {product.featured_image_url && (
+          {screenshotSrc && (
             <div className="relative aspect-video rounded-3xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-zinc-900 shadow-xl">
               <Image
-                src={product.featured_image_url}
+                src={screenshotSrc}
                 alt={`${product.name} dashboard preview`}
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 65vw"
                 className="object-cover"
+                unoptimized={screenshotSrc.includes('thum.io') || screenshotSrc.includes('favicons')}
               />
             </div>
           )}
+
 
           {/* 5. Full Description */}
           <div className="glass-card rounded-3xl p-6 sm:p-8 space-y-4">

@@ -5,6 +5,7 @@ import { Trophy, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Product } from '@/lib/types';
 import { RatingBadge } from '../ui/RatingBadge';
 import { AffiliateCTA } from '../ui/AffiliateCTA';
+import { getProductLogoUrl, getProductScreenshotUrl } from '@/lib/utils';
 
 interface TopRankedProductProps {
   product: Product;
@@ -12,6 +13,9 @@ interface TopRankedProductProps {
 
 export function TopRankedProduct({ product }: TopRankedProductProps) {
   if (!product) return null;
+
+  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url);
+  const screenshotSrc = getProductScreenshotUrl(product.featured_image_url, product.official_website_url);
 
   return (
     <section className="my-12">
@@ -34,13 +38,14 @@ export function TopRankedProduct({ product }: TopRankedProductProps) {
           {/* Left Column: Featured Image & Logo */}
           <div className="lg:col-span-5 flex flex-col items-center text-center">
             <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-slate-200/80 dark:border-zinc-800 bg-slate-900 shadow-2xl mb-4 group">
-              {product.featured_image_url ? (
+              {screenshotSrc ? (
                 <Image
-                  src={product.featured_image_url}
+                  src={screenshotSrc}
                   alt={product.name}
                   fill
                   sizes="(max-width: 1024px) 100vw, 40vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  unoptimized={screenshotSrc.includes('thum.io') || screenshotSrc.includes('favicons')}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-indigo-500 dark:text-indigo-400 bg-indigo-950/30">
@@ -62,11 +67,18 @@ export function TopRankedProduct({ product }: TopRankedProductProps) {
               {/* Product Header */}
               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3">
-                  {product.logo_url && (
-                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 flex-shrink-0">
-                      <Image src={product.logo_url} alt="" fill className="object-cover" />
+                  {logoSrc && (
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 flex-shrink-0 p-1 flex items-center justify-center">
+                      <Image
+                        src={logoSrc}
+                        alt={`${product.name} logo`}
+                        fill
+                        className="object-contain p-1"
+                        unoptimized={logoSrc.includes('favicons') || logoSrc.includes('iconify')}
+                      />
                     </div>
                   )}
+
                   <div>
                     <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-100">{product.name}</h3>
                     <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
