@@ -73,7 +73,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(fullIconUrl, { status: 302 });
       }
 
-      // 2. Return real favicon of final destination domain (e.g., getodinai.com, muncheye.com, etc.)
+      // 2. Look for webpage og:image or header image if apple-touch-icon not found
+      const ogMatch =
+        html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+        html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+      if (ogMatch?.[1]) {
+        const fullImageUrl = new URL(ogMatch[1], finalUrl).href;
+        return NextResponse.redirect(fullImageUrl, { status: 302 });
+      }
+
+      // 3. Fallback: Google favicon of final destination domain
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${finalDomain}&sz=128`;
       return NextResponse.redirect(faviconUrl, { status: 302 });
     } else {
@@ -96,7 +105,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(screenshotUrl, { status: 302 });
     }
   } catch {
-    // Network fallback: extract initial domain or return generic icon
+    // Network fallback
     try {
       const domain = new URL(targetUrl).hostname.replace(/^www\./, '');
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
@@ -106,3 +115,4 @@ export async function GET(request: NextRequest) {
     }
   }
 }
+

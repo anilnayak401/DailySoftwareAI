@@ -30,20 +30,20 @@ export function formatTime(timeString?: string | null): string {
 
 /**
  * Gets a clean, high-resolution logo URL for a product.
- * Pulls the real target website favicon by following redirects and extracting webpage icons.
+ * Uses logoUrl if present, otherwise automatically extracts actual favicon/image from websiteUrl.
  */
 export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string | null, productName?: string, slug?: string): string {
-  // 1. If explicit custom logoUrl exists (not unsplash), use it
-  if (logoUrl && !logoUrl.includes('images.unsplash.com')) {
+  // 1. If explicit custom logoUrl exists, use it!
+  if (logoUrl) {
     return logoUrl;
   }
 
-  // 2. Route through /api/extract-logo to follow affiliate redirects and pull real destination webpage favicon
+  // 2. Route through /api/extract-logo to follow redirects and pull real destination favicon/image
   if (websiteUrl) {
     return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo&name=${encodeURIComponent(productName || '')}`;
   }
 
-  // 3. Fallback: derive domain from product slug for favicon lookup
+  // 3. Fallback: derive domain from product slug
   const cleanDomain = slug || (productName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (cleanDomain) {
     return `https://www.google.com/s2/favicons?domain=${cleanDomain}.com&sz=128`;
@@ -51,6 +51,7 @@ export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string |
 
   return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 }
+
 
 
 
