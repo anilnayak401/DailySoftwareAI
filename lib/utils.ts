@@ -38,8 +38,9 @@ export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string |
   }
 
   if (websiteUrl) {
-    return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo`;
+    return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo&name=${encodeURIComponent(productName || '')}`;
   }
+
 
   // Generate crisp brand logo badge based on product name if no website URL
   const name = productName || 'AI Tool';
