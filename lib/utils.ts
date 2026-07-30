@@ -30,42 +30,34 @@ export function formatTime(timeString?: string | null): string {
 
 /**
  * Gets a clean, high-resolution logo URL for a product.
- * Returns custom logo_url if set, otherwise generates a crisp, high-definition product logo badge.
+ * Returns custom logo_url if set, otherwise automatically extracts actual product logo from its official webpage URL.
  */
 export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string | null, productName?: string): string {
-  if (logoUrl && !logoUrl.includes('images.unsplash.com')) {
+  if (logoUrl && !logoUrl.includes('images.unsplash.com') && !logoUrl.includes('ui-avatars.com')) {
     return logoUrl;
   }
 
-  // Generate crisp, high-definition brand logo badge based on product name
+  if (websiteUrl) {
+    return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo`;
+  }
+
+  // Generate crisp brand logo badge based on product name if no website URL
   const name = productName || 'AI Tool';
   const words = name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(Boolean);
   const initials = words.length >= 2
     ? (words[0][0] + words[1][0]).toUpperCase()
     : name.substring(0, 2).toUpperCase();
 
-  const colors = [
-    '6366F1', // Indigo
-    'EC4899', // Pink
-    '8B5CF6', // Purple
-    '10B981', // Emerald
-    'F59E0B', // Amber
-    '06B6D4', // Cyan
-    '3B82F6', // Blue
-    'EF4444', // Red
-    '84CC16', // Lime
-    'A855F7', // Violet
-  ];
+  const colors = ['6366F1', 'EC4899', '8B5CF6', '10B981', 'F59E0B', '06B6D4', '3B82F6', 'EF4444'];
   const charCodeSum = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const bgColor = colors[charCodeSum % colors.length];
 
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${bgColor}&color=fff&size=256&bold=true&font-size=0.45&rounded=true`;
 }
 
-
 /**
  * Gets a screenshot or featured image URL for a product.
- * Returns custom featured_image_url if set, otherwise generates live website screenshot from official website URL.
+ * Returns custom featured_image_url if set, otherwise automatically extracts actual banner/screenshot from official webpage URL.
  */
 export function getProductScreenshotUrl(featuredImageUrl?: string | null, websiteUrl?: string | null): string {
   if (featuredImageUrl && !featuredImageUrl.includes('images.unsplash.com')) {
@@ -73,9 +65,10 @@ export function getProductScreenshotUrl(featuredImageUrl?: string | null, websit
   }
 
   if (websiteUrl) {
-    return `https://image.thum.io/get/width/1200/crop/800/${websiteUrl}`;
+    return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=image`;
   }
 
   return featuredImageUrl || '';
 }
+
 
