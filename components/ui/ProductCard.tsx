@@ -16,7 +16,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product, featured = false, className }: ProductCardProps) {
   const primaryCategory = product.categories?.[0]?.name || 'Software';
-  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url);
+  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url, product.name);
+
 
 
   // Tinted micro-pill styling based on pricing type

@@ -110,7 +110,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const primaryCategory = product.categories?.[0] || { name: 'AI Tools', slug: 'ai-tools' };
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailysoftwareai.com';
-  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url);
+  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url, product.name);
+
   const screenshotSrc = getProductScreenshotUrl(product.featured_image_url, product.official_website_url);
 
 
