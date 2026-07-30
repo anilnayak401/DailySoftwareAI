@@ -279,7 +279,8 @@ export const MOCK_PRODUCTS: Product[] = [
     tagline: 'Vintage Ephemera Prompt Vault for Junk Journals & Digital Crafts',
     short_description: 'Dexter Dang’s curated AI prompt collection for generating vintage labels, stamps, antique receipts, and junk journal graphics.',
     full_description: 'Printable Ephemera Prompts allows digital craft creators and Etsy sellers to instantly generate unlimited vintage labels, tickets, collage sheets, and ephemera graphics using Midjourney and DALL-E.',
-    logo_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80',
+    logo_url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80',
+
     featured_image_url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
     official_website_url: 'https://printableephemera.com',
     launch_date: '2026-07-25',
@@ -443,7 +444,8 @@ export const MOCK_PRODUCTS: Product[] = [
     tagline: 'AI Internet Marketing & Niche Funnel Automation Software',
     short_description: 'Automates niche research, sales page copywriting, lead magnets, and email sequences in any profitable market segment.',
     full_description: 'NicheFlow AI helps digital marketers uncover untapped sub-niches and generate complete end-to-end sales funnels with AI copywriting and landing page generation.',
-    logo_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80',
+    logo_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80',
+
     featured_image_url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
     official_website_url: 'https://nicheflow.ai',
     launch_date: '2026-07-22',

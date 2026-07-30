@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-function isPlatformDomain(domain: string): boolean {
+function isAffiliateRedirectDomain(domain: string): boolean {
   const lowercase = domain.toLowerCase();
   return (
     lowercase.includes('jvz') ||
@@ -16,28 +16,32 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const targetUrl = searchParams.get('url');
   const type = searchParams.get('type') || 'logo'; // 'logo' | 'image'
+  const productName = searchParams.get('name') || '';
 
   if (!targetUrl) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
   }
 
-  let domain = '';
   try {
-    domain = new URL(targetUrl).hostname.replace(/^www\./, '');
-  } catch {
-    return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
-  }
+    let finalUrl = targetUrl;
+    let finalDomain = '';
 
-  // 1. If it's a direct product site (not a platform/affiliate domain), use real domain favicon FIRST
-  if (type === 'logo' && !isPlatformDomain(domain)) {
-    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-    return NextResponse.redirect(faviconUrl, { status: 302 });
-  }
+    try {
+      const initialDomain = new URL(targetUrl).hostname.replace(/^www\./, '');
 
-  // 2. If it is a platform domain (JVZoo/WarriorPlus) or favicon is missing, crawl page HTML for logo/og:image or screenshot crop
-  try {
+      // If it's a direct product domain (not an affiliate redirect domain like jvz5 or warriorplus),
+      // we can return Google Favicon or IconHorse immediately!
+      if (type === 'logo' && !isAffiliateRedirectDomain(initialDomain)) {
+        const faviconUrl = `https://www.google.com/s2/favicons?domain=${initialDomain}&sz=128`;
+        return NextResponse.redirect(faviconUrl, { status: 302 });
+      }
+    } catch {
+      // ignore
+    }
+
+    // Follow redirects to get the real product sales page destination URL
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(targetUrl, {
       redirect: 'follow',
@@ -50,41 +54,55 @@ export async function GET(request: NextRequest) {
     });
     clearTimeout(timeoutId);
 
-    const finalUrl = response.url;
+    finalUrl = response.url;
     const html = await response.text();
-    const finalDomain = new URL(finalUrl).hostname.replace(/^www\./, '');
+    finalDomain = new URL(finalUrl).hostname.replace(/^www\./, '');
 
-    // If final domain redirected to a non-platform domain, return its real favicon!
-    if (type === 'logo' && !isPlatformDomain(finalDomain)) {
+    if (type === 'logo') {
+      // 1. Try to extract apple-touch-icon or shortcut icon from target HTML
+      const appleTouch = html.match(
+        /<link[^>]*rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]*href=["']([^"']+)["']/i
+      );
+      const iconMatch = html.match(
+        /<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/i
+      );
+
+      const rawIcon = appleTouch?.[1] || iconMatch?.[1];
+      if (rawIcon && !rawIcon.toLowerCase().includes('warriorplus')) {
+        const fullIconUrl = new URL(rawIcon, finalUrl).href;
+        return NextResponse.redirect(fullIconUrl, { status: 302 });
+      }
+
+      // 2. Return real favicon of final destination domain (e.g., getodinai.com, muncheye.com, etc.)
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${finalDomain}&sz=128`;
       return NextResponse.redirect(faviconUrl, { status: 302 });
+    } else {
+      // Image request: extract og:image or twitter:image
+      const ogMatch =
+        html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+        html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+      const twitterMatch =
+        html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
+        html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
+
+      const rawImage = ogMatch?.[1] || twitterMatch?.[1];
+      if (rawImage) {
+        const fullImageUrl = new URL(rawImage, finalUrl).href;
+        return NextResponse.redirect(fullImageUrl, { status: 302 });
+      }
+
+      // Fallback live website screenshot
+      const screenshotUrl = `https://image.thum.io/get/width/1200/crop/800/${finalUrl}`;
+      return NextResponse.redirect(screenshotUrl, { status: 302 });
     }
-
-    // Try extracting logo <img>, apple-touch-icon, or og:image from the page HTML
-    const logoImg = html.match(
-      /<img[^>]*src=["']([^"']*(?:logo|brand|header|product)[^"']*)["']/i
-    );
-    const appleTouch = html.match(
-      /<link[^>]*rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]*href=["']([^"']+)["']/i
-    );
-    const ogMatch =
-      html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
-      html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-
-    const extractedImage = logoImg?.[1] || appleTouch?.[1] || ogMatch?.[1];
-
-    if (extractedImage && !isPlatformDomain(extractedImage)) {
-      const fullImageUrl = new URL(extractedImage, finalUrl).href;
-      return NextResponse.redirect(fullImageUrl, { status: 302 });
-    }
-
-    // Fallback: Take a screenshot crop of their website page (NO platform logos!)
-    const websiteCropUrl = `https://image.thum.io/get/width/300/crop/300/${finalUrl}`;
-    return NextResponse.redirect(websiteCropUrl, { status: 302 });
-
   } catch {
-    // Fallback website screenshot crop
-    const websiteCropUrl = `https://image.thum.io/get/width/300/crop/300/${targetUrl}`;
-    return NextResponse.redirect(websiteCropUrl, { status: 302 });
+    // Network fallback: extract initial domain or return generic icon
+    try {
+      const domain = new URL(targetUrl).hostname.replace(/^www\./, '');
+      const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+      return NextResponse.redirect(faviconUrl, { status: 302 });
+    } catch {
+      return NextResponse.json({ error: 'Failed to extract logo' }, { status: 500 });
+    }
   }
 }
