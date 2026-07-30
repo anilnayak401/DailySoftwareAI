@@ -14,7 +14,8 @@ interface TopRankedProductProps {
 export function TopRankedProduct({ product }: TopRankedProductProps) {
   if (!product) return null;
 
-  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url, product.name);
+  const logoSrc = getProductLogoUrl(product.logo_url, product.official_website_url, product.name, product.slug);
+
 
   const screenshotSrc = getProductScreenshotUrl(product.featured_image_url, product.official_website_url);
 
