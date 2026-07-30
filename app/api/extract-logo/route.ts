@@ -12,6 +12,12 @@ function isMarketplaceImage(url: string): boolean {
 
 function getProductMatchingImage(name: string): string {
   const lower = name.toLowerCase();
+  if (lower.includes('chat') || lower.includes('support')) {
+    return 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=300&q=80';
+  }
+  if (lower.includes('seo') || lower.includes('rank') || lower.includes('keyword')) {
+    return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80';
+  }
   if (lower.includes('trivia') || lower.includes('kids')) {
     return 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80';
   }
@@ -20,9 +26,6 @@ function getProductMatchingImage(name: string): string {
   }
   if (lower.includes('ephemera') || lower.includes('craft') || lower.includes('vintage')) {
     return 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80';
-  }
-  if (lower.includes('niche') || lower.includes('funnel') || lower.includes('marketing')) {
-    return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80';
   }
   return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 }
@@ -37,10 +40,24 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
   }
 
+  let domain = '';
   try {
-    // Fetch target webpage following HTTP 301/302 redirects
+    domain = new URL(targetUrl).hostname.replace(/^www\./, '');
+  } catch {
+    const matchingVisual = getProductMatchingImage(productName);
+    return NextResponse.redirect(matchingVisual, { status: 302 });
+  }
+
+  // 1. For non-marketplace product domains, Google Favicon is 100% fast, reliable & returns real brand favicon/logo!
+  if (type === 'logo' && !domain.includes('warriorplus.com') && !domain.includes('jvzoo.com') && !domain.includes('launchpadjv.com')) {
+    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    return NextResponse.redirect(faviconUrl, { status: 302 });
+  }
+
+  try {
+    // 2. For marketplace or image requests, attempt to crawl target page
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const response = await fetch(targetUrl, {
       redirect: 'follow',
@@ -70,7 +87,6 @@ export async function GET(request: NextRequest) {
       if (ogMatch?.[1]) candidates.push(ogMatch[1]);
       if (twitterMatch?.[1]) candidates.push(twitterMatch[1]);
     } else {
-      // 1. Look for apple-touch-icon, logo <img>, shortcut icon, or og:image
       const appleTouch = html.match(
         /<link[^>]*rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]*href=["']([^"']+)["']/i
       );
@@ -86,7 +102,6 @@ export async function GET(request: NextRequest) {
       if (ogMatch?.[1]) candidates.push(ogMatch[1]);
     }
 
-    // Try candidates extracted from target page HTML
     for (const rawUrl of candidates) {
       if (!rawUrl) continue;
       const fullUrl = new URL(rawUrl, finalUrl).href;
@@ -96,18 +111,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 2. If final domain is an actual product site (not warriorplus), use Google favicon
     if (!finalDomain.includes('warriorplus.com')) {
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${finalDomain}&sz=128`;
       return NextResponse.redirect(faviconUrl, { status: 302 });
     }
 
-    // 3. If it's a warriorplus product page without a standalone logo, use matching product visual
+    // Fallback: Matching product visual (no alphabetical badges!)
     const matchingVisual = getProductMatchingImage(productName);
     return NextResponse.redirect(matchingVisual, { status: 302 });
 
   } catch {
-    // Fallback matching product visual
+    if (domain && !domain.includes('warriorplus.com')) {
+      return NextResponse.redirect(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`, { status: 302 });
+    }
     const matchingVisual = getProductMatchingImage(productName);
     return NextResponse.redirect(matchingVisual, { status: 302 });
   }

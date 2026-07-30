@@ -41,20 +41,9 @@ export function getProductLogoUrl(logoUrl?: string | null, websiteUrl?: string |
     return `/api/extract-logo?url=${encodeURIComponent(websiteUrl)}&type=logo&name=${encodeURIComponent(productName || '')}`;
   }
 
-
-  // Generate crisp brand logo badge based on product name if no website URL
-  const name = productName || 'AI Tool';
-  const words = name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(Boolean);
-  const initials = words.length >= 2
-    ? (words[0][0] + words[1][0]).toUpperCase()
-    : name.substring(0, 2).toUpperCase();
-
-  const colors = ['6366F1', 'EC4899', '8B5CF6', '10B981', 'F59E0B', '06B6D4', '3B82F6', 'EF4444'];
-  const charCodeSum = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const bgColor = colors[charCodeSum % colors.length];
-
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${bgColor}&color=fff&size=256&bold=true&font-size=0.45&rounded=true`;
+  return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 }
+
 
 /**
  * Gets a screenshot or featured image URL for a product.
