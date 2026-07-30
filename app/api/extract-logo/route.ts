@@ -3,32 +3,28 @@ import { NextRequest, NextResponse } from 'next/server';
 function isMarketplaceImage(url: string): boolean {
   const lowercase = url.toLowerCase();
   return (
-    lowercase.includes('warriorplus') ||
-    lowercase.includes('wplus') ||
-    lowercase.includes('jvzoo') ||
-    lowercase.includes('jvz1') ||
-    lowercase.includes('jvz4') ||
-    lowercase.includes('jvz5') ||
-    lowercase.includes('jvz7') ||
-    lowercase.includes('launchpadjv') ||
-    lowercase.includes('clickbank') ||
-    lowercase.includes('paykickstart') ||
-    lowercase.includes('favicon.ico')
+    lowercase.includes('warriorplus.com/favicon') ||
+    lowercase.includes('warriorplus.com/images') ||
+    lowercase.includes('wplus_logo') ||
+    lowercase.includes('wplus-logo')
   );
 }
 
-function generateNameBadge(name: string): string {
-  const cleanName = name || 'AI Tool';
-  const words = cleanName.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(Boolean);
-  const initials = words.length >= 2
-    ? (words[0][0] + words[1][0]).toUpperCase()
-    : cleanName.substring(0, 2).toUpperCase();
-
-  const colors = ['6366F1', 'EC4899', '8B5CF6', '10B981', 'F59E0B', '06B6D4', '3B82F6', 'EF4444', '84CC16', 'A855F7'];
-  const charCodeSum = cleanName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const bgColor = colors[charCodeSum % colors.length];
-
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${bgColor}&color=fff&size=256&bold=true&font-size=0.45&rounded=true`;
+function getProductMatchingImage(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes('trivia') || lower.includes('kids')) {
+    return 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=300&q=80';
+  }
+  if (lower.includes('coloring') || lower.includes('promptoria') || lower.includes('eggshell')) {
+    return 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=300&q=80';
+  }
+  if (lower.includes('ephemera') || lower.includes('craft') || lower.includes('vintage')) {
+    return 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=300&q=80';
+  }
+  if (lower.includes('niche') || lower.includes('funnel') || lower.includes('marketing')) {
+    return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=300&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80';
 }
 
 export async function GET(request: NextRequest) {
@@ -64,7 +60,6 @@ export async function GET(request: NextRequest) {
     const candidates: string[] = [];
 
     if (type === 'image') {
-      // 1. Look for og:image or twitter:image
       const ogMatch =
         html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
         html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
@@ -75,15 +70,12 @@ export async function GET(request: NextRequest) {
       if (ogMatch?.[1]) candidates.push(ogMatch[1]);
       if (twitterMatch?.[1]) candidates.push(twitterMatch[1]);
     } else {
-      // 2. Look for product logo, header image, or apple-touch-icon
+      // 1. Look for apple-touch-icon, logo <img>, shortcut icon, or og:image
       const appleTouch = html.match(
         /<link[^>]*rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]*href=["']([^"']+)["']/i
       );
       const logoImg = html.match(
         /<img[^>]*src=["']([^"']*(?:logo|brand|product|header)[^"']*)["']/i
-      );
-      const mainImg = html.match(
-        /<img[^>]*src=["']([^"']+\.(?:png|jpg|jpeg|svg|webp))["']/i
       );
       const ogMatch = html.match(
         /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i
@@ -91,11 +83,10 @@ export async function GET(request: NextRequest) {
 
       if (logoImg?.[1]) candidates.push(logoImg[1]);
       if (appleTouch?.[1]) candidates.push(appleTouch[1]);
-      if (mainImg?.[1]) candidates.push(mainImg[1]);
       if (ogMatch?.[1]) candidates.push(ogMatch[1]);
     }
 
-    // Filter out marketplace domain platform logos (WarriorPlus, JVZoo, etc.)
+    // Try candidates extracted from target page HTML
     for (const rawUrl of candidates) {
       if (!rawUrl) continue;
       const fullUrl = new URL(rawUrl, finalUrl).href;
@@ -105,19 +96,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If final domain is NOT a marketplace platform, try Google favicon of final domain
-    if (!isMarketplaceImage(finalUrl)) {
+    // 2. If final domain is an actual product site (not warriorplus), use Google favicon
+    if (!finalDomain.includes('warriorplus.com')) {
       const faviconUrl = `https://www.google.com/s2/favicons?domain=${finalDomain}&sz=128`;
       return NextResponse.redirect(faviconUrl, { status: 302 });
     }
 
-    // If it is a marketplace page and no product logo exists, return matching product name badge
-    const badgeUrl = generateNameBadge(productName);
-    return NextResponse.redirect(badgeUrl, { status: 302 });
+    // 3. If it's a warriorplus product page without a standalone logo, use matching product visual
+    const matchingVisual = getProductMatchingImage(productName);
+    return NextResponse.redirect(matchingVisual, { status: 302 });
 
   } catch {
-    // Abort or network failure fallback
-    const badgeUrl = generateNameBadge(productName);
-    return NextResponse.redirect(badgeUrl, { status: 302 });
+    // Fallback matching product visual
+    const matchingVisual = getProductMatchingImage(productName);
+    return NextResponse.redirect(matchingVisual, { status: 302 });
   }
 }
